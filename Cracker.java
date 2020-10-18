@@ -3,25 +3,33 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 
 /**
- * @author Susmita
- *
+ * This program will read two files(shadow and common-passwords.txt) and 
+ * print user names and passwords based on the passwords present in the common-passwords.txt .
+ * This program assumes that both files exist in the same directory.
+ * 
+ * 1.shadow : It is shadow password file containing users list in username:shash:……(several other fields) format
+ * 2. common-passwords.txt : This is a list of common passwords
+ * 
+ * @Project - CS 645 - Project 1: Problem 1(Part 2) 
+ * @author 
+ * 1. Ida Jebakirubai Stephen Joseph
+ * 2. Susmita Biswas
+ * 
+ * 
  */
 public class Cracker {
+	
+	public Cracker(){
+		
+	}
 	/**
 	 * This method is used to read a file
 	 * @param file
 	 * @return
 	 * @throws IOException
 	 */
-	public Cracker(){
-		
-	}
-	
 	static String[] readFile(String file) throws IOException {
 		
         FileReader fileReader = new FileReader(file);
@@ -41,38 +49,43 @@ public class Cracker {
 	 */
 	public static void main(String[] args) {
 		
-
-		String[] usersInput = new String[9];
-		String[] saltsInput = new String[9];
-		String[] hashesInput = new String[9];
+		String shadowFileName = "./shadow";
+		String passwordFileName = "./common-passwords.txt";
+		String[] usersInput = new String[10];
+		String[] saltsInput = new String[10];
+		String[] hashesInput = new String[10];
 		String[] shadowSimplePassword;
-		Class[] paramString = new Class[2];
-		paramString[0] = String.class;
-		paramString[1] = String.class;
+		String result="" ;
+
 		try {
 			
-			Class cls = Class.forName("MD5Shadow");
-			Object obj = cls.newInstance();
+			MD5Shadow shadow = new MD5Shadow();
 			
-			shadowSimplePassword = readFile("shadow");
+			shadowSimplePassword = readFile(shadowFileName);
 			
-			for (int i=0; i< shadowSimplePassword.length -1; i++) {
+			for (int i=0; i< shadowSimplePassword.length; i++) {
 				
 				String[] parts = shadowSimplePassword[i].split(":");
 				usersInput[i] = parts[0];
-				saltsInput[i] = parts[1].substring(3, 11);
-				hashesInput[i] = parts[1].substring(12);
+				String[] saltHash = parts[1].split("\\$");
+				saltsInput[i] = saltHash[2];
+				hashesInput[i] = saltHash[3];
 			}
-		
 			/*
 			 * Read dictionary file into memory
 			 */
-			String[] dictionary = readFile("common-passwords.txt");
-			for (int j = 0; j < hashesInput.length-1; j++) {
+			String[] dictionary = readFile(passwordFileName);
+			for (int j = 0; j < hashesInput.length; j++) {
 				for (int i=0; i < dictionary.length; i++) {
-					//call the crypt method of MDShadow class with passing the parameter the dictionary password and salt
-					Method method = cls.getDeclaredMethod("crypt", paramString);
-					String result = (String)method.invoke(obj, dictionary[i], saltsInput[j]);
+					try {
+						
+						//call the crypt method of MDShadow class with passing the parameter the dictionary password and salt
+						result = shadow.crypt(dictionary[i], saltsInput[j]);
+						
+						}catch(Exception ex) {
+							System.out.println("Error decrypting the password :"+dictionary[i]);
+						}
+					
 					/*
 					 * Print if we have a match
 					 */
@@ -83,33 +96,16 @@ public class Cracker {
 			}
 			
 		} catch (IOException ioException) {
-			// TODO Auto-generated catch block
 			ioException.printStackTrace();
-		}
-		catch (NoSuchMethodException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
-		System.exit(0);
+		} catch(Exception ex) {
+			ex.printStackTrace();
 		}
+		System.exit(0);
+	}
 }
 
 
